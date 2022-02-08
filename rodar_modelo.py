@@ -12,11 +12,11 @@ from keras.layers import Dense
 from keras.callbacks import EarlyStopping
 
 from analise_restricoes import analise_das_restricoes
+from analise_restricoes import analise_fucao_objetivo
 
 
 
-
-def avaliar_resposta(Pop,resposta_meta,FO,model,media_score,media_MSE,linguagem,max_ou_min,nome_codigo_simulacao,nome_arquivo_entrada,nome_arquivo_saida, dados_de_entrada, dados_de_saida, restricoes):
+def avaliar_resposta(Pop,resposta_meta,FO,model,media_score,media_MSE,linguagem,max_ou_min,nome_codigo_simulacao,nome_arquivo_entrada,nome_arquivo_saida, dados_de_entrada, dados_de_saida, restricoes, dados_equacao_FO):
     reposta_real = 0
     CREATE_NO_WINDOW = 0x08000000
     """altera os valores de entrada no arquivo de entrada e roda a simulação"""
@@ -29,11 +29,7 @@ def avaliar_resposta(Pop,resposta_meta,FO,model,media_score,media_MSE,linguagem,
         arquivo_entrada.write(" ")
     arquivo_entrada.close()
     """analisa qual linguagem de programação está sendo usada"""
-    #if media_score < 0.7:
-    #    Z = 3.29
-    #else:
-    #    Z = 1.96
-    #Z = 1.96
+
     if media_score > 0:
         ta = tf.TensorArray(tf.float32, size=0, dynamic_size=True, clear_after_read=False)
         x_meta = np.array(Pop)
@@ -45,39 +41,39 @@ def avaliar_resposta(Pop,resposta_meta,FO,model,media_score,media_MSE,linguagem,
         if max_ou_min == 0:
             valor_com_marguem = valor_predito - 1.96*media_MSE
             print(f"valor predito com margem: {valor_com_marguem} --- FO: {FO}")
-            #if valor_com_marguem <= FO:
-            metamodelo_promisor = 1
-            print(f"valor pre: {valor_predito} margem: {media_MSE} valor_com_marguem: {valor_com_marguem} FO: {FO}")
-            if linguagem == 0:
-                subprocess.run(["C:/Program Files (x86)/Rockwell Software/Arena/siman.exe","C:/Users/darve/Desktop/Trabalho-Estoque-New.p"],creationflags=CREATE_NO_WINDOW)
-            else:
-                subprocess.run("python " + nome_codigo_simulacao,creationflags=CREATE_NO_WINDOW)
+            if valor_com_marguem <= FO:
+                metamodelo_promisor = 1
+                print(f"valor pre: {valor_predito} margem: {media_MSE} valor_com_marguem: {valor_com_marguem} FO: {FO}")
+                if linguagem == 0:
+                    subprocess.run(["C:/Program Files (x86)/Rockwell Software/Arena/siman.exe","C:/Users/darve/Desktop/Trabalho-Estoque-New.p"],creationflags=CREATE_NO_WINDOW)
+                else:
+                    subprocess.run("python " + nome_codigo_simulacao,creationflags=CREATE_NO_WINDOW)
 
                     #subprocess.run("gcc -c " + nome_codigo_simulacao,creationflags=CREATE_NO_WINDOW)
                     #subprocess.run("Rscript " + nome_codigo_simulacao,creationflags=CREATE_NO_WINDOW)
-            """
+
             else:
                 valor_predito = float(valor_predito)
                 valor_predito = round(valor_predito, 4)
                 Pop.append(valor_predito)
-            """
+
         else:
             valor_com_marguem = valor_predito + 1.96*media_MSE
             print(f"valor predito com margem: {valor_com_marguem} --- FO: {FO}")
-            #if valor_com_marguem >= FO:
-            metamodelo_promisor = 1
-            print(f"valor pre: {valor_predito} margem: {media_MSE} valor_com_marguem: {valor_com_marguem} FO: {FO}")
-            if linguagem == 0:
-                subprocess.run(["C:/Program Files (x86)/Rockwell Software/Arena/siman.exe","C:/Users/darve/Desktop/Trabalho-Estoque-New.p"],creationflags=CREATE_NO_WINDOW)
-            else:
-                subprocess.run("python " + nome_codigo_simulacao, creationflags=CREATE_NO_WINDOW)
+            if valor_com_marguem >= FO:
+                metamodelo_promisor = 1
+                print(f"valor pre: {valor_predito} margem: {media_MSE} valor_com_marguem: {valor_com_marguem} FO: {FO}")
+                if linguagem == 0:
+                    subprocess.run(["C:/Program Files (x86)/Rockwell Software/Arena/siman.exe","C:/Users/darve/Desktop/Trabalho-Estoque-New.p"],creationflags=CREATE_NO_WINDOW)
+                else:
+                    subprocess.run("python " + nome_codigo_simulacao, creationflags=CREATE_NO_WINDOW)
 
-            """
+
             else:
                 valor_predito = float(valor_predito)
                 valor_predito = round(valor_predito, 4)
                 Pop.append(valor_predito)
-            """
+
     else:
         metamodelo_promisor = 1
         if linguagem == 0:
@@ -104,6 +100,8 @@ def avaliar_resposta(Pop,resposta_meta,FO,model,media_score,media_MSE,linguagem,
         reposta_real = float(resultado[funcao_objetivo])
         reposta_real = round(reposta_real, 4)
 
+        resposta_restricao = analise_fucao_objetivo(dados_de_entrada, Pop, dados_de_saida, resultado, dados_equacao_FO)
+
         """colocar teste para verificar viabilidade"""
         if analise_das_restricoes(0,dados_de_entrada, Pop, dados_de_saida, resultado, restricoes) == True:
             print("\n solucao viavel\n")
@@ -114,6 +112,8 @@ def avaliar_resposta(Pop,resposta_meta,FO,model,media_score,media_MSE,linguagem,
                     funcao_objetivo = j
             print("\n funcao objetivo\n")
             print(float(resultado[funcao_objetivo]))
+            print("\n funcao objetivo restricao\n")
+            print(resposta_restricao)
             Pop.append(float(resultado[funcao_objetivo]))
             Pop[len(Pop)-1] = round(Pop[len(Pop)-1], 4)
         else:

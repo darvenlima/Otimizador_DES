@@ -148,9 +148,6 @@ class interface(Tk):
         self.frame_grafico_simulacao = Frame(self.dados__play_simulacao, width = 600, height = 298, relief = "raise" )
         self.frame_grafico_simulacao.place(x = 250, y= 150)
 
-        canvas = FigureCanvasTkAgg(self.f, master= self.frame_grafico_simulacao)
-        canvas.draw()
-        canvas.get_tk_widget().pack(side= BOTTOM, fill= BOTH, expand=True)
 
         #toolbar = NavigationToolbar2TkAgg(canvas, self.frame_grafico_simulacao)
         #toolbar.update()
@@ -221,6 +218,20 @@ class interface(Tk):
                 self.dados_restricoes[i][1] = self.restricao_separada[0] + " " + self.restricao_separada[1]
             else:
                 self.dados_restricoes[i][1] = self.restricao_separada[0] + " - " + self.restricao_separada[1]
+
+        self.dados_equacao_FO = ["",self.equacao_FO.get()]
+        self.string =  str(self.equacao_FO.get())
+        for j in range(0 , len(self.dados_variaveis)):
+            self.padrao = re.search(str(self.dados_variaveis[j][1].get()), self.string)
+
+            if self.padrao:
+                self.dados_equacao_FO[0] = self.dados_equacao_FO[0] + " " +  self.dados_variaveis[j][1].get()
+        for j in range(0 , len(self.dados_variaveis_saida)):
+            self.padrao = re.search(str(self.dados_variaveis_saida[j].get()), self.string)
+
+            if self.padrao:
+                self.dados_equacao_FO[0] = self.dados_equacao_FO[0] + " " +  self.dados_variaveis_saida[j].get()
+        print(f"equacao_FO: {self.dados_equacao_FO}")
         dados_de_entrada = []
         limites = []
         dados_de_saida = []
@@ -233,6 +244,10 @@ class interface(Tk):
         endereco_entrada = self.endereco_arq_entrada.get()
         endereco_saida   = self.endereco_arq_saida.get()
         linguagem  = self.ling.get()
+        if self.max_min.get() == "min":
+            max_ou_min = 0
+        else:
+            max_ou_min = 1
         """
         print(dados_de_entrada)
         print(dados_de_saida)
@@ -264,7 +279,6 @@ class interface(Tk):
         media_score = 0
         media_MSE = 0
         lista_entradas_rn = []
-        max_ou_min = 1
         if max_ou_min == 0:
             FO = 1000000
             FO_rodada = 1000000
@@ -276,16 +290,16 @@ class interface(Tk):
 
         inicio = time.time()
         geracoes = 0
-        #while not self.teste_hipotese(FO) and geracoes <= 20:
-        #    geracoes += 1
-        for j in range(0, 5):
+        while not self.teste_hipotese(FO) and geracoes <= 20:
+            geracoes += 1
+        #for j in range(0, 5):
             #simula os 50 dados de entrada
             #print("\nPop")
             #print(Pop)
             for i in range(0,len(self.Pop)):
 
 
-                self.Pop2, valor_real = avaliar_resposta(self.Pop[i],resposta_meta,FO,model,media_score,media_MSE,1,1,endereco_simualacao,endereco_entrada,endereco_saida, dados_de_entrada, dados_de_saida, self.dados_restricoes)
+                self.Pop2, valor_real = avaliar_resposta(self.Pop[i],resposta_meta,FO,model,media_score,media_MSE,1,1,endereco_simualacao,endereco_entrada,endereco_saida, dados_de_entrada, dados_de_saida, self.dados_restricoes, self.dados_equacao_FO)
                 #self.Pop[i].append(self.Pop2)
 
                 if valor_real != 0:
@@ -325,10 +339,6 @@ class interface(Tk):
                             bname.set(str(self.Pop[i][l]))
 
                         print(FO)
-                if FO != 1000000 and FO != -1000000:
-                    self.lista_melhor_solucao.append(FO)
-                    self.cont = self.cont + 1
-                    self.animate()
                 self.var_entrada_play.config(bg="white")
                 for l in range(0,len(self.Pop[i])):
                     bname = (self.entry_simu_identities[l])
@@ -344,9 +354,7 @@ class interface(Tk):
                 #self.after(0, self.tela_resultados)
             self.lista_FO.append(FO_rodada)
             FO_rodada = valor_inicial_FO
-            if media_score <= 0:
-                model,media_score,media_MSE = criar_rede_neural(lista_entradas_rn)
-                inicio_neural = (j+1)*50
+            model,media_score,media_MSE = criar_rede_neural(lista_entradas_rn)
             self.PopInt = selecao_melhores_res(self.Pop)
             self.Pop.clear()
             self.Pop = cross(self.PopInt, dados_de_entrada, dados_de_saida, limites, self.dados_restricoes)
@@ -595,6 +603,7 @@ class interface(Tk):
         self.label_alterar = Label(self.tabela_var_fo ,text = "alterar função objetivo")
         self.label_alterar.grid(row=0,column = 2)
 
+        self.max_min.set("min")
         self.select_max_min_fo = OptionMenu(self.tabela_var_fo,self.max_min,"max","min")
         self.select_max_min_fo.grid(row=1, column = 0)
         self.label_texto_funcao = Label(self.tabela_var_fo ,text = self.equacao_FO.get())
