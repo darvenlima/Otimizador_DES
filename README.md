@@ -9,4 +9,20 @@ O funcionamento do otimizador se utiliza de um algoritmo genético como meta-heu
 
 # Como utilizar o projeto 
 
-Não necessita de pré instalação de nenhum pacote, porém 
+Antes de iniciar o uso do otimizador, deve-se adaptar o código da simulação com a leitura e escrita dos arquivos .txt.
+o formato dos arquivos de entrada e de saída precisão seguir essa estrutura. Primeira linha com os nomes das variavéis separadas por vírgula e, na linha de baixo os valores de cada uma das variáveis em ordem, também separada por vírgula.
+
+
+Para acessar otimizador:
+
+Pré-requisitos: python 3.9 
+
+clonar repositório em uma pasta vazia:
+git clone https://github.com/darvenlima/OtimizadorDES
+
+para executar o projeto, existe na pasta dist o executável do código, porém ele ainda possui muita lentidão e necessita de melhorias.
+Mas é possível utiliza-lo executando pela interface gráfica. Na pasta do projeto execute o comando:
+
+python .\interface.py
+
+
